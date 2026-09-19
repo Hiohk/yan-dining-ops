@@ -1,0 +1,192 @@
+@import 'tailwindcss';
+/* 设计 token 唯一来源（packages/tokens）。相对路径引入，避免构建器解析差异。 */
+@import '../../../../packages/tokens/src/tokens.css';
+
+/**
+ * 把设计 token 映射为 Tailwind 主题。
+ * 使用 `inline` 让生成的工具类直接引用 CSS 变量（而非复制字面值），
+ * 这样运行时可覆盖 token 而不必重新构建。
+ */
+@theme inline {
+  /* 品牌 */
+  --color-primary: var(--lto-primary);
+  --color-primary-press: var(--lto-primary-press);
+  --color-primary-deep: var(--lto-primary-deep);
+  --color-primary-soft: var(--lto-primary-soft);
+  --color-primary-tint: var(--lto-primary-tint);
+  --color-ink: var(--lto-brand-ink);
+  --color-icon-ink: var(--lto-icon-ink);
+
+  /* 中性 */
+  --color-bg: var(--lto-bg);
+  --color-surface: var(--lto-surface);
+  --color-sunken: var(--lto-surface-sunken);
+  --color-ink-1: var(--lto-text);
+  --color-ink-2: var(--lto-text-muted);
+  --color-ink-3: var(--lto-text-faint);
+  --color-on-primary: var(--lto-text-on-primary);
+  --color-line: var(--lto-border);
+  --color-line-strong: var(--lto-border-strong);
+
+  /* 语义 */
+  --color-warn-bg: var(--lto-warning-bg);
+  --color-warn-fg: var(--lto-warning-fg);
+  --color-info-bg: var(--lto-info-bg);
+  --color-info-fg: var(--lto-info-fg);
+  --color-ok-bg: var(--lto-success-bg);
+  --color-ok-fg: var(--lto-success-fg);
+  --color-danger-bg: var(--lto-danger-bg);
+  --color-danger-fg: var(--lto-danger-fg);
+
+  /* 圆角 */
+  --radius-card: var(--lto-r-card);
+  --radius-xl: var(--lto-r-xl);
+  --radius-lg: var(--lto-r-lg);
+  --radius-pill: var(--lto-r-pill);
+
+  /* 字号（对齐 UI-01 实测档位） */
+  /* 正文 11.25 而不是 11：设计稿描述行首行 16 字、墨宽 179.0 ⇒ 每字 11.24；
+     按 11px 渲染每字只有 11.0，整行 2.2% 窄，找餐厅卡里 17 字能塞进一行、
+     设计稿却是 16 字换行 —— 换行点因此不同。11.25 同时对上字距与换行点。 */
+  --text-2xs: 11.25px;
+  --text-2xs--line-height: 16px;
+  /* 邀请函卡片里的地址行。**必须显式定义**：@theme 里没有 --text-12 时
+     `text-12` 是无效工具类，会静默回退到 body 的 15px —— 实测墨高 13.5 而设计稿是 10.8，
+     差的就是这一档。凡是自造档位都要在这里登记，否则不会报错、只会默默走错。 */
+  --text-12: 12px;
+  --text-12--line-height: 16px;
+  --text-13: 13px;
+  --text-13--line-height: 20px;
+  --text-14: 14px;
+  --text-14--line-height: 21px;
+  --text-15: 15px;
+  --text-15--line-height: 22px;
+  --text-17: 17px;
+  --text-17--line-height: 24px;
+  /* 餐厅卡标题。实测设计稿字距 18.0~18.3（「京季」段起点差 18.28、「四季民福（王府井店）」
+     段起点差 17.9~18.7），按 text-17 渲染整行只有 157.5pt，比设计稿的 170.2 窄 7%。
+     行高仍取 24，与设计稿的标题行盒（+11.3..+35.3）一致，卡内纵向节奏不变。 */
+  --text-18: 18px;
+  --text-18--line-height: 24px;
+  --text-20: 20px;
+  --text-20--line-height: 28px;
+  --text-24: 24px;
+  --text-24--line-height: 32px;
+
+  /* 间距。页边距按屏分三档（见 tokens.css 里的实测清单）——
+     px-page / px-page-tab / px-page-wide */
+  --spacing-page: var(--lto-page-x);
+  --spacing-page-tab: var(--lto-page-x-tab);
+  --spacing-page-wide: var(--lto-page-x-wide);
+  --spacing-tabbar: var(--lto-tabbar-h);
+
+  /* 阴影 */
+  --shadow-card: var(--lto-shadow-card);
+  --shadow-raised: var(--lto-shadow-raised);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--lto-bg);
+    color: var(--lto-text);
+    font-family:
+      -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB',
+      'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-size: var(--lto-fs-15);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* 移动端点击不出现灰色高亮块 */
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none;
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  input,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  /* 移动端隐藏滚动条但保留滚动能力 */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@layer components {
+  /* 应用外壳：移动端居中，桌面端呈现手机宽度 */
+  .lto-app {
+    width: 100%;
+    max-width: var(--lto-app-max);
+    margin-inline: auto;
+    min-height: 100dvh;
+    position: relative;
+    background: var(--lto-bg);
+  }
+
+  .lto-card {
+    background: var(--lto-surface);
+    border-radius: var(--lto-r-card);
+    box-shadow: var(--lto-shadow-card);
+  }
+
+  .lto-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 10px;
+    border-radius: var(--lto-r-pill);
+    font-size: var(--lto-fs-12);
+    line-height: 18px;
+    background: var(--lto-surface-sunken);
+    color: var(--lto-text-muted);
+  }
+
+  /* 安全区 */
+  .pt-safe {
+    padding-top: calc(var(--lto-safe-top) + 8px);
+  }
+  .pb-safe {
+    padding-bottom: var(--lto-safe-bottom);
+  }
+}
+
+@keyframes lto-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.lto-fade-up {
+  animation: lto-fade-up 0.22s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lto-fade-up {
+    animation: none;
+  }
+}

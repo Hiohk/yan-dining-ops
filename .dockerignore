@@ -1,0 +1,44 @@
+# 缩小 build context（发送给 docker daemon 的体积），并挡掉不该进镜像的东西。
+#
+# ⚠️ `.env` 那两行是安全项，不是优化项：apps/api/.env 里有工作区 API Key（sk_…），
+#    等同工作区全部权限。虽然本方案不用 COPY .env 进镜像，但 build context 里的文件
+#    一旦被后续手滑加进 COPY 就会永久留在镜像层里（镜像层是不可变的，删掉也仍在历史里）。
+#    两道门比一道好。
+
+# 依赖与产物：镜像里会重新装、重新 build
+node_modules
+**/node_modules
+dist
+**/dist
+apps/web/dev-dist
+
+# 密钥
+#
+# ⚠️ 必须写成 `**/.env` 这种带 `**` 的形式。实测踩过：只写 `.env` 时，
+#    `COPY apps/api apps/api` 会**把 apps/api/.env 连同工作区 Key 一起 COPY 进镜像**
+#    —— Docker 的 .dockerignore 里不带斜杠的模式只匹配 context 根那一层，
+#    与 .gitignore「任意层级都匹配」的语义**不一样**。
+#    这个错误没有任何报错，只能靠 `docker run … test -f /app/apps/api/.env` 查出来。
+#    而且镜像层不可变：一旦进去了，后面再删文件也仍在历史层里，只能重建镜像。
+.env
+**/.env
+.env.*
+**/.env.*
+# .env.example 只是占位符、不含真实密钥，保留它方便在容器里对照字段名
+!**/.env.example
+
+# 运行期数据（SQLite）
+apps/api/data
+
+# 与构建无关的大件 / 文档
+.git
+UI-01
+UI-02
+技术方案
+需求文档资料
+scripts
+*.md
+.vscode
+.idea
+*.log
+.DS_Store

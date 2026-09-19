@@ -1,0 +1,63 @@
+# 生产部署：web（nginx 托管静态 + 反代 /api）+ api（会话令牌网关）
+#
+# 为什么是 `context: .` 加子目录 Dockerfile，而不是各自以 apps/* 为 context：
+# 这是 pnpm workspace，两个 app 都依赖 packages/*（@lto/cards、@lto/tokens），
+# 而 pnpm 装包时需要**所有成员的 package.json 都在场**才能解出完整的依赖图。
+# 所以 build context 必须是仓库根、Dockerfile 走子路径。
+#
+# 密钥去向（这一节是硬约束，改之前先读）：
+#   OPENHEX_WORKSPACE_KEY / SLUG 是**后端密钥**，只在这里以 environment 运行时注入，
+#   永远不进镜像层、不进前端 bundle。前端能拿到的只有 VITE_OPENHEX_AGENT_ID（非密钥）。
+#   ⚠️ 别把这两个变量加进 apps/web 的 build args —— 那会把工作区权限打进静态文件，
+#      等于公开发布（浏览器可下载、可逆向）。
+services:
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        # 前端唯一需要的配置，**构建期**打进 bundle。非密钥。
+        VITE_OPENHEX_AGENT_ID: ${VITE_OPENHEX_AGENT_ID:?请在 .env 里填 VITE_OPENHEX_AGENT_ID}
+    ports:
+      # 左边可用 WEB_PORT 覆盖（服务器 80 被占用时改这里，不用改 nginx 配置）
+      - "${WEB_PORT:-80}:80"
+    depends_on:
+      api:
+        # 等 api 真的健康再起 nginx：否则首屏那几个 /api 请求会打到还没监听的端口上，
+        # 表现为「刚部署完首页转圈、刷新一下又好了」这种最难查的现象。
+        condition: service_healthy
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      OPENHEX_WORKSPACE_KEY: ${OPENHEX_WORKSPACE_KEY:?请在 .env 里填 OPENHEX_WORKSPACE_KEY}
+      OPENHEX_WORKSPACE_SLUG: ${OPENHEX_WORKSPACE_SLUG:?请在 .env 里填 OPENHEX_WORKSPACE_SLUG}
+      # 容器里必须绑 0.0.0.0 —— 默认的 127.0.0.1 在容器内只有自己那个网络命名空间能到，
+      # nginx 容器就永远连不上（现象是 502）。本地开发不受影响，默认仍是 127.0.0.1。
+      HOST: 0.0.0.0
+      # 可选：只在自建 / 预发环境需要。⚠️ 凭据跟着这个地址走，别指向不信任的域名。
+      # OPENHEX_API_BASE: ${OPENHEX_API_BASE:-}
+    # 刻意**不映射端口到宿主机**：api 只该被同网络的 nginx 访问。
+    # 对公网暴露 8000 等于把「用工作区 Key 换会话令牌」这个端点直接交出去。
+    volumes:
+      # SQLite 落盘（apps/api/data/memory.db）。不挂卷的话每次重建镜像画像全丢。
+      - api-data:/app/apps/api/data
+    healthcheck:
+      # 用 node 而不是 curl/wget：node:22-slim 是精简镜像，**两者都没有**，
+      # 拿它们做 healthcheck 会让容器永远 unhealthy。node 一定在，且 22 有全局 fetch。
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  api-data:

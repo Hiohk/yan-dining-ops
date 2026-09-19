@@ -1,0 +1,14 @@
+{
+  "name": "lanting-dining-ops",
+  "private": true,
+  "version": "2.0.0",
+  "description": "企业餐务运营助理 · 小燕知 (Mobile H5/PWA)",
+  "packageManager": "pnpm@8.15.1",
+  "scripts": {
+    "dev": "pnpm -r --parallel run dev",
+    "dev:web": "pnpm --filter @lto/web dev",
+    "dev:api": "pnpm --filter @lto/api dev",
+    "build:web": "pnpm --filter @lto/web build",
+    "typecheck": "pnpm --filter @lto/web run typecheck && pnpm --filter @lto/api run typecheck"
+  }
+}

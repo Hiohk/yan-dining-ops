@@ -1,0 +1,47 @@
+node_modules/
+dist/
+dist-ssr/
+*.local
+.DS_Store
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.uv/
+uv.lock
+*.db
+*.sqlite3
+
+# 画像 SQLite 落盘目录（*.db 已挡，这里把 -wal/-shm 等伴生文件一并挡住）
+apps/api/data/
+
+# 密钥：.env 里是 OpenHex 的工作区 API Key（sk_…），等同工作区全部权限。
+# 收紧成「除 .env.example 外一律忽略」—— 只写 .env 会漏掉 .env.production 这类
+# 各环境变体，而漏一个就等于把 Key 提交上去了。
+.env
+.env.*
+!.env.example
+
+# logs / editors
+*.log
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# 内部资料：本仓库是**公开**的，这些不进版本库。
+# 它们与构建无关（.dockerignore 里也一并挡住了，不进镜像），留在本地即可。
+#   UI-01 / UI-02   设计稿（14MB，占仓库体积九成）
+#   技术方案        架构与选型方案 V1.0/V2.0
+#   需求文档资料    产品需求文档（PRD）
+#   项目记忆.md     工程过程记录，含生产服务器地址等运维细节
+#   卡片协议与提示词.md  提示词与卡片协议约定
+UI-01/
+UI-02/
+技术方案/
+需求文档资料/
+项目记忆.md
+卡片协议与提示词.md
+
+# pwa
+apps/web/dev-dist/

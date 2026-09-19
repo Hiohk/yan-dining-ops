@@ -1,0 +1,19 @@
+{
+  "name": "@lto/cards",
+  "version": "2.0.0",
+  "private": true,
+  "description": "卡片协议 —— 后端 Pydantic 为唯一手写源，本包由构建期生成/校验",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./generated": "./src/generated.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
